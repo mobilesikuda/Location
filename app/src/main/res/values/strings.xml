@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Location</string>
+    <string name="textGPS">GPS</string>
+    <string name="textNetwork">Network</string>
+    <string name="textGoogle">Google services</string>
+</resources>
