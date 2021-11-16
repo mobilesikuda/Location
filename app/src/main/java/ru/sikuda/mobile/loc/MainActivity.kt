@@ -1,7 +1,7 @@
 package ru.sikuda.mobile.loc
 
 import android.Manifest
-import android.annotation.SuppressLint
+//import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
@@ -50,7 +50,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
+        binding.switchGoogle.isChecked = fusedLocationUpdates
+        if(!fusedLocationUpdates) binding.switchGoogle.isClickable = false
+//        binding.switchGoogle.setOnCheckedChangeListener { _, isChecked ->
+//            if (isChecked) {
+//                // The toggle is enabled
+//            } else {
+//                // The toggle is disabled
+//            }
+//        }
     }
 
     override fun onResume() {
@@ -71,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                         this, Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED)
             if(locationManagerNet.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManagerNet.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-                locationManagerNet.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000, 10f, locationListenerNet);
+                locationManagerNet.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000, 10f, locationListenerNet)
             //locationManagerNet.requestLocationUpdates(
             //        LocationManager.NETWORK_PROVIDER, 1000 * 10, 10f,
             //        locationListenerNet
@@ -84,7 +92,6 @@ class MainActivity : AppCompatActivity() {
 
         //Google services
         if (fusedLocationUpdates) startfusedUpdates()
-
         checkEnabled()
     }
 
@@ -123,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                             this@MainActivity,
                             Manifest.permission.ACCESS_FINE_LOCATION
                     ) == PackageManager.PERMISSION_GRANTED )  {
-                showLocation(locationManagerGPS!!.getLastKnownLocation(provider))
+                showLocation(locationManagerGPS.getLastKnownLocation(provider))
             }
 
         }
@@ -160,7 +167,7 @@ class MainActivity : AppCompatActivity() {
             binding.tvLocationGoogle.setText(formatLocation(location))
     }
 
-    private fun formatLocation(location: Location?): String? {
+    private fun formatLocation(location: Location?): String {
         return if (location == null) "-"
         else String.format(
                 "Coordinates: lat = %1$.4f, lon = %2$.4f, time = %3\$tF %3\$tT",
@@ -168,12 +175,19 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    @SuppressLint("SetTextI18n")
+    //@SuppressLint("SetTextI18n")
     private fun checkEnabled() {
-        binding.tvEnabledGPS.setText( """GPS Enabled: ${locationManagerGPS.isProviderEnabled(LocationManager.GPS_PROVIDER)}""")
-        binding.tvEnabledNet.setText( """Network Enabled: ${locationManagerNet.isProviderEnabled(LocationManager.NETWORK_PROVIDER)}""")
+
+        binding.switchGPS.isChecked = locationManagerGPS.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        binding.switchNet.isChecked = locationManagerNet.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        //if(!fusedLocationUpdates) binding.switchGoogle.isClickable = false
+
+        //binding.tvEnabledGPS.setText( """GPS Enabled: ${locationManagerGPS.isProviderEnabled(LocationManager.GPS_PROVIDER)}""")
+        //binding.tvEnabledNet.setText( """Network Enabled: ${locationManagerNet.isProviderEnabled(LocationManager.NETWORK_PROVIDER)}""")
     }
 
 }
+
+
 
 
