@@ -1,13 +1,16 @@
 package ru.sikuda.mobile.loc
 
 import android.Manifest
-//import android.annotation.SuppressLint
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Looper
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.databinding.DataBindingUtil
@@ -22,43 +25,56 @@ class MainActivity : AppCompatActivity() {
     private lateinit var locationManagerNet: LocationManager
 
     //And Google services
+    private var fLocationAvailable: Boolean = false
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var fusedLocationUpdates = true
     private lateinit var locationCallback: LocationCallback
 
-
+    //permission for location
     private val PERMISSION_REQUEST1 = 1001
     private val PERMISSION_REQUEST2 = 1002
 
+    //main binding
     lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //setContentView(R.layout.activity_main)
-
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         locationManagerGPS = getSystemService(LOCATION_SERVICE) as LocationManager
         locationManagerNet = getSystemService(LOCATION_SERVICE) as LocationManager
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult?) {
-                locationResult ?: return
-                for (location in locationResult.locations){
-                    showLocation(location)
+        fLocationAvailable = isLocationEnabled(this)
+        if (fLocationAvailable) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+            locationCallback = object : LocationCallback() {
+                override fun onLocationResult(locationResult: LocationResult?) {
+                    val locationResult1 = locationResult ?: return
+                    for (location in locationResult1.locations) {
+                        showLocation(location)
+                    }
                 }
             }
         }
-        binding.switchGoogle.isChecked = fusedLocationUpdates
-        if(!fusedLocationUpdates) binding.switchGoogle.isClickable = false
-//        binding.switchGoogle.setOnCheckedChangeListener { _, isChecked ->
-//            if (isChecked) {
-//                // The toggle is enabled
-//            } else {
-//                // The toggle is disabled
-//            }
-//        }
+        binding.switchGPS.isClickable = false
+        binding.switchNet.isClickable = false
+        binding.switchGoogle.isClickable = false
+        binding.switchGoogle.isChecked = fLocationAvailable
+    }
+
+    @SuppressLint("ObsoleteSdkInt")
+    fun isLocationEnabled(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // This is a new method provided in API 28
+            val lm = context.getSystemService(LOCATION_SERVICE) as LocationManager
+            lm.isLocationEnabled
+        } else {
+            // This was deprecated in API 28
+            val mode: Int = Settings.Secure.getInt(
+                context.contentResolver, Settings.Secure.LOCATION_MODE,
+                Settings.Secure.LOCATION_MODE_OFF
+            )
+            mode != Settings.Secure.LOCATION_MODE_OFF
+        }
     }
 
     override fun onResume() {
@@ -67,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                         this,
                         Manifest.permission.ACCESS_FINE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED )
-            //if(locationManagerGPS.getAllProviders().contains(LocationManager.GPS_PROVIDER) && locationManagerNet.isProviderEnabled(LocationManager.GPS_PROVIDER))
+            if (binding.switchGPS.isChecked)
                 locationManagerGPS.requestLocationUpdates(LocationManager.GPS_PROVIDER, 10000, 10f, locationListenerGPS )
         else ActivityCompat.requestPermissions(
                 this,
@@ -78,12 +94,8 @@ class MainActivity : AppCompatActivity() {
         if( ActivityCompat.checkSelfPermission(
                         this, Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED)
-            if(locationManagerNet.getAllProviders().contains(LocationManager.NETWORK_PROVIDER) && locationManagerNet.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+            if(binding.switchNet.isChecked)
                 locationManagerNet.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000, 10f, locationListenerNet)
-            //locationManagerNet.requestLocationUpdates(
-            //        LocationManager.NETWORK_PROVIDER, 1000 * 10, 10f,
-            //        locationListenerNet
-            //)
         else ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
@@ -91,7 +103,8 @@ class MainActivity : AppCompatActivity() {
         )
 
         //Google services
-        if (fusedLocationUpdates) startfusedUpdates()
+        startfusedUpdates()
+
         checkEnabled()
     }
 
@@ -175,15 +188,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    //@SuppressLint("SetTextI18n")
     private fun checkEnabled() {
 
         binding.switchGPS.isChecked = locationManagerGPS.isProviderEnabled(LocationManager.GPS_PROVIDER)
         binding.switchNet.isChecked = locationManagerNet.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        //if(!fusedLocationUpdates) binding.switchGoogle.isClickable = false
 
-        //binding.tvEnabledGPS.setText( """GPS Enabled: ${locationManagerGPS.isProviderEnabled(LocationManager.GPS_PROVIDER)}""")
-        //binding.tvEnabledNet.setText( """Network Enabled: ${locationManagerNet.isProviderEnabled(LocationManager.NETWORK_PROVIDER)}""")
     }
 
 }
