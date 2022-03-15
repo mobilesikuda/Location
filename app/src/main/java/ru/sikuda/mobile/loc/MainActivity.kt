@@ -47,8 +47,8 @@ class MainActivity : AppCompatActivity() {
         if (fLocationAvailable) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
             locationCallback = object : LocationCallback() {
-                override fun onLocationResult(locationResult: LocationResult?) {
-                    val locationResult1 = locationResult ?: return
+                override fun onLocationResult(p0: LocationResult) {
+                    val locationResult1 = p0 ?: return
                     for (location in locationResult1.locations) {
                         showLocation(location)
                     }
